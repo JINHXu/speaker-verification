@@ -1,0 +1,164 @@
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text.AudioToCharDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text.AudioToBPEDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text.AudioLabelDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text._TarredAudioToTextDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text.TarredAudioToCharDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:50 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text.TarredAudioToBPEDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:56 experimental:28] Module <class 'nemo.collections.asr.losses.ctc.CTCLoss'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:56 experimental:28] Module <class 'nemo.collections.asr.data.audio_to_text_dali.AudioToCharDALIDataset'> is experimental, not ready for production and is not fully supported. Use at your own risk.
+[NeMo W 2021-02-18 20:12:56 nemo_logging:349] /Users/xujinghua/miniconda3/lib/python3.7/site-packages/torchaudio/backend/utils.py:54: UserWarning: "sox" backend is being deprecated. The default backend will be changed to "sox_io" backend in 0.8.0 and "sox" backend will be removed in 0.9.0. Please migrate to "sox_io" backend. Please refer to https://github.com/pytorch/audio/issues/903 for the detail.
+      '"sox" backend is being deprecated. '
+    
+[NeMo W 2021-02-18 20:12:57 nemo_logging:349] /Users/xujinghua/miniconda3/lib/python3.7/site-packages/omegaconf/basecontainer.py:232: UserWarning: cfg.pretty() is deprecated and will be removed in a future version.
+    Use OmegaConf.to_yaml(cfg)
+    
+      category=UserWarning,
+    
+[NeMo I 2021-02-18 20:12:57 train_spk_ver_model:75] Hydra config: name: SpeakerNet
+    sample_rate: 16000
+    repeat: 2
+    dropout: 0.5
+    separable: true
+    n_filters: 512
+    model:
+      train_ds:
+        manifest_filepath: /data/train.json
+        sample_rate: 16000
+        labels: null
+        batch_size: 64
+        shuffle: true
+        time_length: 8
+        is_tarred: false
+        tarred_audio_filepaths: null
+        tarred_shard_strategy: scatter
+      validation_ds:
+        manifest_filepath: /data/dev.json
+        sample_rate: 16000
+        labels: null
+        batch_size: 128
+        shuffle: false
+        time_length: 8
+      preprocessor:
+        _target_: nemo.collections.asr.modules.AudioToMelSpectrogramPreprocessor
+        normalize: per_feature
+        window_size: 0.02
+        sample_rate: 16000
+        window_stride: 0.01
+        window: hann
+        features: 64
+        n_fft: 512
+        frame_splicing: 1
+        dither: 1.0e-05
+        stft_conv: false
+      encoder:
+        _target_: nemo.collections.asr.modules.ConvASREncoder
+        feat_in: 64
+        activation: relu
+        conv_mask: true
+        jasper:
+        - filters: 512
+          repeat: 1
+          kernel:
+          - 3
+          stride:
+          - 1
+          dilation:
+          - 1
+          dropout: 0.5
+          residual: true
+          separable: true
+        - filters: 512
+          repeat: 2
+          kernel:
+          - 7
+          stride:
+          - 1
+          dilation:
+          - 1
+          dropout: 0.5
+          residual: true
+          separable: true
+        - filters: 512
+          repeat: 2
+          kernel:
+          - 11
+          stride:
+          - 1
+          dilation:
+          - 1
+          dropout: 0.5
+          residual: true
+          separable: true
+        - filters: 512
+          repeat: 2
+          kernel:
+          - 15
+          stride:
+          - 1
+          dilation:
+          - 1
+          dropout: 0.5
+          residual: true
+          separable: true
+        - filters: 1500
+          repeat: 1
+          kernel:
+          - 1
+          stride:
+          - 1
+          dilation:
+          - 1
+          dropout: 0.0
+          residual: false
+          separable: true
+      decoder:
+        _target_: nemo.collections.asr.modules.SpeakerDecoder
+        feat_in: 1500
+        num_classes: 74
+        pool_mode: xvector
+        emb_sizes: 512,512
+        angular: true
+      loss:
+        scale: 30
+        margin: 0.2
+      optim:
+        name: novograd
+        lr: 0.06
+        args:
+          name: auto
+          betas:
+          - 0.95
+          - 0.5
+          weight_decay: 0.001
+        sched:
+          name: CosineAnnealing
+          iters_per_batch: 1
+          max_steps: null
+          args:
+            name: auto
+            warmup_steps: null
+            warmup_ratio: 0.1
+            min_lr: 0.0
+            last_epoch: -1
+    trainer:
+      gpus: 0
+      max_epochs: 5
+      max_steps: null
+      num_nodes: 1
+      accelerator: null
+      accumulate_grad_batches: 1
+      amp_level: O0
+      deterministic: true
+      checkpoint_callback: false
+      logger: false
+      log_every_n_steps: 1
+      val_check_interval: 1.0
+    exp_manager:
+      exp_dir: null
+      name: SpeakerNet
+      create_tensorboard_logger: true
+      create_checkpoint_callback: true
+    
+[NeMo I 2021-02-18 20:12:57 exp_manager:183] Experiments will be logged at /Users/xujinghua/speaker-verification-with-NeMo/nemo_experiments/SpeakerNet/2021-02-18_20-12-57
+[NeMo I 2021-02-18 20:12:57 exp_manager:519] TensorboardLogger has been set up
+[NeMo W 2021-02-18 20:12:57 exp_manager:562] trainer had a weights_save_path of cwd(). This was ignored.
