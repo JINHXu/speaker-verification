@@ -1,5 +1,5 @@
 # Speaker Verification with [NeMo](https://github.com/NVIDIA/NeMo)
-*This is merely an experiment, the dataset `an4` used for the experiment is not suitable for training a speaker verification model, it was only usde for fast training.*
+*This is merely an experiment, the dataset `an4` used for the experiment is not suitable for training a speaker verification model, it was only used for fast training.*<br>
 Nemo's examples and tutorials do not provide explicit illustrations to speaker verification. This will be an experiment of Speaker verification with NeMo.
 
 ## Data Preparation
